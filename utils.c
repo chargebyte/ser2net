@@ -25,6 +25,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "ser2net.h"
 #include "utils.h"
@@ -204,4 +207,31 @@ write_ignore_fail(int fd, const char *data, size_t count)
 	data += written;
 	count -= written;
     }
+}
+
+int
+msleep(int msec)
+{
+    struct timespec req;
+
+    req.tv_sec = 0;
+    req.tv_nsec = msec * 1000000;
+
+    return nanosleep(&req, NULL);
+}
+
+int
+file_store(const char *filename, const char *buf, size_t count)
+{
+    int fd;
+
+    if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) == -1)
+            return -1;
+
+    if (write(fd, buf, count) != count) {
+            close(fd);
+            return -1;
+    }
+
+    return close(fd);
 }

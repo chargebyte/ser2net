@@ -42,6 +42,7 @@
 #include "telnet.h"
 #include "devio.h"
 #include "buffer.h"
+#include "sysfs-led.h"
 
 #define SERIAL "term"
 #define NET    "tcp "
@@ -230,6 +231,12 @@ typedef struct port_info
 #ifdef USE_RS485_FEATURE
     struct serial_rs485 *rs485conf;
 #endif
+
+    /*
+     * LED names to flash for serial traffic
+     */
+    char *led_tx;
+    char *led_rx;
 } port_info_t;
 
 port_info_t *ports = NULL; /* Linked list of ports. */
@@ -311,6 +318,8 @@ init_port_data(port_info_t *port)
 #ifdef USE_RS485_FEATURE
     port->rs485conf = NULL;
 #endif
+    port->led_tx = NULL;
+    port->led_rx = NULL;
 }
 
 static void
@@ -529,6 +538,9 @@ handle_dev_fd_read(struct devio *io)
     if (port->tb)
 	/* Do both tracing, ignore errors. */
 	do_trace(port, port->tb, port->dev_to_tcp.buf, count, SERIAL);
+
+    if (port->led_rx)
+	led_blink_kick(port->led_rx);
 
     port->dev_bytes_received += count;
 
@@ -759,6 +771,8 @@ handle_tcp_fd_read(int fd, void *data)
 	    return;
 	}
     } else {
+	if (port->led_tx)
+	    led_blink_kick(port->led_tx);
 	port->dev_bytes_sent += count;
 	port->tcp_to_dev.cursize -= count;
 	if (port->tcp_to_dev.cursize != 0) {
@@ -1854,6 +1868,12 @@ myconfig(void *data, struct absout *eout, const char *pos)
     } else if (strncmp(pos, "tb=", 3) == 0) {
 	/* trace both directions. */
 	port->trace_both.filename = find_tracefile(pos + 3);
+    } else if (strncmp(pos, "led-rx=", 7) == 0) {
+	/* LED for UART RX traffic */
+	port->led_rx = find_led(pos + 7);
+    } else if (strncmp(pos, "led-tx=", 7) == 0) {
+	/* LED for UART TX traffic */
+	port->led_tx = find_led(pos + 7);
 #ifdef USE_RS485_FEATURE
     } else if (strncmp(pos, "rs485=", 6) == 0) {
 	/* get RS485 configuration. */

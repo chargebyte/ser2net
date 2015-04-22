@@ -64,6 +64,9 @@ char *find_tracefile(const char *name);
 /* Search for RS485 configuration by name. */
 struct serial_rs485 *find_rs485conf(const char *name);
 
+/* Search for a LED by name */
+char *find_led(const char *name);
+
 void check_ipv6_only(int family, struct sockaddr *addr, int fd);
 
 /* Make sure the full contents get written, return an error if it occurs. */
@@ -71,5 +74,11 @@ int write_full(int fd, char *data, size_t count);
 
 /* Write the data completely out, return without comment on error. */
 void write_ignore_fail(int fd, const char *data, size_t count);
+
+/* Helper to sleep a given amount of milli-seconds */
+int msleep(int msec);
+
+/* Store the given data to a file */
+int file_store(const char *filename, const char *buf, size_t count);
 
 #endif /* UTILS */

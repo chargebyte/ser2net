@@ -31,6 +31,7 @@
 #include "readconfig.h"
 #include "utils.h"
 #include "telnet.h"
+#include "sysfs-led.h"
 
 #define MAX_LINE_SIZE 256	/* Maximum line length in the config file. */
 
@@ -361,6 +362,89 @@ free_rs485confs(void)
 }
 #endif
 
+struct led_s
+{
+    char *name;
+    char *device;
+    unsigned int duration;
+    struct led_s *next;
+};
+
+/* all LEDs in the system. */
+struct led_s *leds = NULL;
+
+static void
+handle_led(char *name, char *cfg)
+{
+    struct led_s *new_led;
+    char devicename[256];
+
+    new_led = malloc(sizeof(*new_led));
+    if (!new_led) {
+	syslog(LOG_ERR, "Out of memory handling LED on %d", lineno);
+	return;
+    }
+
+    new_led->name = strdup(name);
+    if (!new_led->name) {
+	syslog(LOG_ERR, "Out of memory handling LED on %d", lineno);
+	free(new_led);
+	return;
+    }
+
+    if (sscanf(cfg, "%256s %u", devicename, &new_led->duration) != 2) {
+	syslog(LOG_ERR, "Couldn't parse LED config on %d", lineno);
+	free(new_led->name);
+	free(new_led);
+	return;
+    }
+
+    new_led->device = strdup(devicename);
+    if (!new_led->device) {
+	syslog(LOG_ERR, "Out of memory handling LED on %d", lineno);
+	free(new_led->name);
+	free(new_led);
+	return;
+    }
+
+    /* setup the led */
+    led_blink_prepare(new_led->device, new_led->duration);
+
+    new_led->next = leds;
+    leds = new_led;
+}
+
+char *
+find_led(const char *name)
+{
+    struct led_s *led = leds;
+
+    while (led) {
+	if (strcmp(name, led->name) == 0)
+	    return strdup(led->device);
+	led = led->next;
+    }
+    syslog(LOG_ERR, "LED %s not found, it will be ignored", name);
+    return NULL;
+}
+
+static void
+free_leds(void)
+{
+    struct led_s *led;
+
+    while (leds) {
+	led = leds;
+	leds = leds->next;
+
+	led_off(led->device);
+
+	free(led->name);
+	free(led->device);
+	free(led);
+    }
+}
+
 static int
 startswith(char *str, const char *test, char **strtok_data)
 {
@@ -503,6 +587,21 @@ handle_config_line(char *inbuf)
 	return;
     }
 
+    if (startswith(inbuf, "LED", &strtok_data)) {
+	char *name = strtok_r(NULL, ":", &strtok_data);
+	char *str = strtok_r(NULL, "\n", &strtok_data);
+	if (name == NULL) {
+	    syslog(LOG_ERR, "No LED name given on line %d", lineno);
+	    return;
+	}
+	if ((str == NULL) || (strlen(str) == 0)) {
+	    syslog(LOG_ERR, "No LED given on line %d", lineno);
+	    return;
+	}
+	handle_led(name, str);
+	return;
+    }
+
     comma = strchr(inbuf, ',');
     if (comma) {
 	if (!strtok_r(comma, ":", &strtok_data)) {
@@ -568,6 +667,7 @@ readconfig(char *filename)
 #ifdef USE_RS485_FEATURE
     free_rs485confs();
 #endif
+    free_leds();
 
     config_num++;
 
