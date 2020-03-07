@@ -1044,7 +1044,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \Y -> year */
 	    case 'Y':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%d", time->tm_year + 1900);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
@@ -1054,7 +1054,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \y -> day of the year (days since Jan 1) */
 	    case 'y':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%d", time->tm_yday);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
@@ -1075,7 +1075,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \m -> month (as a number) */
 	    case 'm':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%d", time->tm_mon);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
@@ -1096,7 +1096,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \D -> day of the month */
 	    case 'D':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%d", time->tm_mday);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
@@ -1106,7 +1106,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \H -> hour (24-hour time) */
 	    case 'H':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%2.2d", time->tm_hour);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
@@ -1116,7 +1116,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \h -> hour (12-hour time) */
 	    case 'h':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		int v;
 
 		v = time->tm_hour;
@@ -1133,7 +1133,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \i -> minute */
 	    case 'i':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%2.2d", time->tm_min);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
@@ -1144,7 +1144,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    case 'S':
 	    seconds:
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%2.2d", time->tm_sec);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
@@ -1174,7 +1174,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \T -> time (HH:MM:SS) */
 	    case 'T':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%2.2d:%2.2d:%2.2d",
 			 time->tm_hour, time->tm_min, time->tm_sec);
 		for (dp = d; *dp; dp++)
@@ -1195,7 +1195,7 @@ process_str(port_info_t *port, struct tm *time, struct timeval *tv,
 	    /* \U -> microseconds in the current second */
 	    case 'U':
 	    {
-		char d[10], *dp;
+		char d[12], *dp;
 		snprintf(d, sizeof(d), "%6.6ld", tv->tv_usec);
 		for (dp = d; *dp; dp++)
 		    op(data, *dp);
